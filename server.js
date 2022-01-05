@@ -36,7 +36,22 @@ app.get("/list", function (req, res) {
     });
 });
 
-app.delete("/delete", function (req, res) {});
+app.get("/detail/:id", function (req, res) {
+  db.collection("practice").findOne(
+    { _id: parseInt(req.params.id) },
+    function (err, result) {
+      res.render("detail.ejs", { iddata: result });
+    }
+  );
+});
+
+app.delete("/delete", function (req, res) {
+  req.body._id = parseInt(req.body._id);
+  db.collection("practice").deleteOne(req.body, function (err, result) {
+    console.log("삭제완료");
+    res.status(200).send({ message: "success!" });
+  });
+});
 
 app.post("/add", function (req, res) {
   res.send("전송완료");
