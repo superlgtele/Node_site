@@ -3,6 +3,9 @@ const app = express();
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const methodOverride = require("method-override");
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+const session = require("express-session");
 
 const db = mongoose.connection;
 mongoose.connect("mongodb://localhost:27017/test");
@@ -18,6 +21,11 @@ app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/public", express.static("public"));
 app.use(methodOverride("_method"));
+app.use(
+  session({ secret: "superlgtele", resave: true, saveUninitialized: false })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.listen(5000, function () {
   console.log("Start 5000 Server!");
@@ -29,6 +37,10 @@ app.get("/", function (req, res) {
 
 app.get("/write", function (req, res) {
   res.render("write.ejs");
+});
+
+app.get("/login", function (req, res) {
+  res.render("login.ejs");
 });
 
 app.get("/edit/:id", function (req, res) {
@@ -102,4 +114,49 @@ app.post("/add", function (req, res) {
       );
     }
   );
+});
+
+app.post(
+  "/login",
+  passport.authenticate("local", {
+    failureRedirect: "/fail",
+  }),
+  function (req, res) {
+    res.redirect("/");
+  }
+);
+
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: "id",
+      passwordField: "pw",
+      session: true,
+      passReqToCallback: false,
+    },
+    function (inputid, inputpw, done) {
+      db.collection("login").findOne({ id: inputid }, function (err, result) {
+        if (err) return done(err);
+
+        if (!result)
+          return done(null, false, { message: "존재하지 않는 아이디입니다" });
+        if (inputpw == result.pw) {
+          return done(null, result);
+        } else {
+          return done(null, false, { message: "비밀번호가 틀렸습니다" });
+        }
+      });
+    }
+  )
+);
+// done 함수 파라미터 기능(서버에러담당, 성공시의 사용자DB데이터, 에러메세지)
+
+// id를 이용해서 세션을 저장시키는 코드(로그인 성공시)
+passport.serializeUser(function (user, done) {
+  done(null, user.id);
+});
+
+// 이 세션 데이터를 가진 사람을 DB에서 찾는 코드(마이페이지 접속시)
+passport.deserializeUser(function (아이디, done) {
+  done(null, {});
 });
