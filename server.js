@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const methodOverride = require("method-override");
 
 const db = mongoose.connection;
 mongoose.connect("mongodb://localhost:27017/test");
@@ -15,17 +16,28 @@ db.on("error", function (err) {
 app.set("view engine", "ejs");
 
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use("/public", express.static("public"));
+app.use(methodOverride("_method"));
 
 app.listen(5000, function () {
   console.log("Start 5000 Server!");
 });
 
 app.get("/", function (req, res) {
-  res.sendFile(__dirname + "/index.html");
+  res.render("index.ejs");
 });
 
 app.get("/write", function (req, res) {
-  res.sendFile(__dirname + "/write.html");
+  res.render("write.ejs");
+});
+
+app.get("/edit/:id", function (req, res) {
+  db.collection("practice").findOne(
+    { _id: parseInt(req.params.id) },
+    function (err, result) {
+      res.render("edit.ejs", { updatepost: result });
+    }
+  );
 });
 
 app.get("/list", function (req, res) {
@@ -51,6 +63,17 @@ app.delete("/delete", function (req, res) {
     console.log("삭제완료");
     res.status(200).send({ message: "success!" });
   });
+});
+
+app.put("/edit", function (req, res) {
+  db.collection("practice").updateOne(
+    { _id: parseInt(req.body.id) },
+    { $set: { title: req.body.title, date: req.body.date } },
+    function (err, result) {
+      console.log("수정완료!");
+      res.redirect("/list");
+    }
+  );
 });
 
 app.post("/add", function (req, res) {
