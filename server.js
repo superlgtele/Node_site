@@ -6,9 +6,10 @@ const methodOverride = require("method-override");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const session = require("express-session");
+require("dotenv").config();
 
 const db = mongoose.connection;
-mongoose.connect("mongodb://localhost:27017/test");
+mongoose.connect(process.env.DB_URL);
 db.once("open", function () {
   console.log("DB connected");
 });
@@ -27,7 +28,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.listen(5000, function () {
+app.listen(process.env.PORT, function () {
   console.log("Start 5000 Server!");
 });
 
@@ -68,6 +69,18 @@ app.get("/detail/:id", function (req, res) {
     }
   );
 });
+
+app.get("/mypage", checklogin, function (req, res) {
+  res.render("mypage.ejs", { 사용자: req.user });
+});
+
+function checklogin(req, res, next) {
+  if (req.user) {
+    next();
+  } else {
+    res.send("로그인을 먼저 해주세요.");
+  }
+}
 
 app.delete("/delete", function (req, res) {
   req.body._id = parseInt(req.body._id);
@@ -157,6 +170,8 @@ passport.serializeUser(function (user, done) {
 });
 
 // 이 세션 데이터를 가진 사람을 DB에서 찾는 코드(마이페이지 접속시)
-passport.deserializeUser(function (아이디, done) {
-  done(null, {});
+passport.deserializeUser(function (serialuser, done) {
+  db.collection("login").findOne({ id: serialuser }, function (err, result) {
+    done(null, result);
+  });
 });
