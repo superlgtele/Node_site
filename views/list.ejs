@@ -37,13 +37,20 @@
 
     <div class="container">
       <ul class="list-group">
-        <% for (var i = 0; i < posts.length; i ++) { %>
+        <% for (let i = 0; i < posts.length; i ++) { %>
         <li class="list-group-item">
           <p>글번호 : <%= posts[i]._id %></p>
           <h4><%= posts[i].title %></h4>
           <p><%= posts[i].date %></p>
           <button class="btn btn-danger delete" data-id="<%= posts[i]._id %>">
-            삭제
+            삭제하기
+          </button>
+          <button
+            type="button"
+            class="btn btn-success"
+            onclick="location.href='edit/<%= posts[i]._id %>'"
+          >
+            수정하기
           </button>
         </li>
         <% } %>

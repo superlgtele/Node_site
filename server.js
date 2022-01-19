@@ -85,7 +85,7 @@ function checklogin(req, res, next) {
 app.delete("/delete", function (req, res) {
   req.body._id = parseInt(req.body._id);
   db.collection("practice").deleteOne(req.body, function (err, result) {
-    console.log("삭제완료");
+    console.log("삭제완료!");
     res.status(200).send({ message: "success!" });
   });
 });
@@ -102,7 +102,7 @@ app.put("/edit", function (req, res) {
 });
 
 app.post("/add", function (req, res) {
-  res.send("전송완료");
+  res.redirect("/list");
   // 콜렉션: counter, name: boardnumber인 데이터 = result
   db.collection("counter").findOne(
     { name: "boardnumber" },
@@ -112,7 +112,7 @@ app.post("/add", function (req, res) {
       db.collection("practice").insertOne(
         { _id: allboardnum + 1, title: req.body.title, date: req.body.date },
         function (err, result) {
-          console.log("저장완료");
+          console.log("저장완료!");
           // 위의 코드가 성공하면 collection: counter 에서 name:boardnumber 인 데이터의 totalPost 값에 1을 더함($increase)
           db.collection("counter").updateOne(
             { name: "boardnumber" },
