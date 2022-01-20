@@ -44,6 +44,10 @@ app.get("/login", function (req, res) {
   res.render("login.ejs");
 });
 
+app.get("/register", function (req, res) {
+  res.render("register.ejs");
+});
+
 app.get("/edit/:id", function (req, res) {
   db.collection("practice").findOne(
     { _id: parseInt(req.params.id) },
@@ -82,14 +86,6 @@ function checklogin(req, res, next) {
   }
 }
 
-app.delete("/delete", function (req, res) {
-  req.body._id = parseInt(req.body._id);
-  db.collection("practice").deleteOne(req.body, function (err, result) {
-    console.log("삭제완료!");
-    res.status(200).send({ message: "success!" });
-  });
-});
-
 app.put("/edit", function (req, res) {
   db.collection("practice").updateOne(
     { _id: parseInt(req.body.id) },
@@ -97,34 +93,6 @@ app.put("/edit", function (req, res) {
     function (err, result) {
       console.log("수정완료!");
       res.redirect("/list");
-    }
-  );
-});
-
-app.post("/add", function (req, res) {
-  res.redirect("/list");
-  // 콜렉션: counter, name: boardnumber인 데이터 = result
-  db.collection("counter").findOne(
-    { name: "boardnumber" },
-    function (err, result) {
-      // practice 콜렉션에 id: result의 totalPost값, title/date는 사용자 입력값을 넣음
-      const allboardnum = result.totalPost;
-      db.collection("practice").insertOne(
-        { _id: allboardnum + 1, title: req.body.title, date: req.body.date },
-        function (err, result) {
-          console.log("저장완료!");
-          // 위의 코드가 성공하면 collection: counter 에서 name:boardnumber 인 데이터의 totalPost 값에 1을 더함($increase)
-          db.collection("counter").updateOne(
-            { name: "boardnumber" },
-            { $inc: { totalPost: 1 } },
-            function (err, result) {
-              if (err) {
-                return console.log(err);
-              }
-            }
-          );
-        }
-      );
     }
   );
 });
@@ -173,5 +141,58 @@ passport.serializeUser(function (user, done) {
 passport.deserializeUser(function (serialuser, done) {
   db.collection("login").findOne({ id: serialuser }, function (err, result) {
     done(null, result);
+  });
+});
+
+app.post("/register", function (req, res) {
+  db.collection("login").insertOne(
+    { id: req.body.id, pw: req.body.pw },
+    function (err, result) {
+      res.redirect("/login");
+    }
+  );
+});
+
+app.post("/add", function (req, res) {
+  res.redirect("/list");
+  // 콜렉션: counter, name: boardnumber인 데이터 = result
+  db.collection("counter").findOne(
+    { name: "boardnumber" },
+    function (err, result) {
+      // practice 콜렉션에 id: result의 totalPost값, title/date는 사용자 입력값을 넣음
+      const AllBoardNum = result.totalPost;
+      const BoardData = {
+        _id: AllBoardNum + 1,
+        user: req.user.id,
+        title: req.body.title,
+        date: req.body.date,
+      };
+      db.collection("practice").insertOne(BoardData, function (err, result) {
+        console.log("저장완료!");
+        // 위의 코드가 성공하면 collection: counter 에서 name:boardnumber 인 데이터의 totalPost 값에 1을 더함($increase)
+        db.collection("counter").updateOne(
+          { name: "boardnumber" },
+          { $inc: { totalPost: 1 } },
+          function (err, result) {
+            if (err) {
+              return console.log(err);
+            }
+          }
+        );
+      });
+    }
+  );
+});
+
+app.delete("/delete", function (req, res) {
+  req.body._id = parseInt(req.body._id);
+  const DeleteData = { _id: req.body._id, user: req.user._id };
+  db.collection("practice").deleteOne(DeleteData, function (err, result) {
+    console.log("삭제완료!");
+    if (err) {
+      console.log(err);
+      alert("상대방의 게시물은 삭제 불가능합니다!");
+    }
+    res.status(200).send({ message: "success!" });
   });
 });
