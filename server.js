@@ -163,7 +163,7 @@ app.post("/add", function (req, res) {
       const AllBoardNum = result.totalPost;
       const BoardData = {
         _id: AllBoardNum + 1,
-        user: req.user.id,
+        user: req.user._id,
         title: req.body.title,
         date: req.body.date,
       };
@@ -187,12 +187,12 @@ app.post("/add", function (req, res) {
 app.delete("/delete", function (req, res) {
   req.body._id = parseInt(req.body._id);
   const DeleteData = { _id: req.body._id, user: req.user._id };
+  console.log(DeleteData);
   db.collection("practice").deleteOne(DeleteData, function (err, result) {
-    console.log("삭제완료!");
-    if (err) {
-      console.log(err);
-      alert("상대방의 게시물은 삭제 불가능합니다!");
+    if (result.deletedCount == 0) {
+      return err;
+    } else {
+      res.status(200).send(result);
     }
-    res.status(200).send({ message: "success!" });
   });
 });
