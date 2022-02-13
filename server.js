@@ -6,6 +6,7 @@ const methodOverride = require("method-override");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const session = require("express-session");
+const bcrypt = require("bcryptjs");
 require("dotenv").config();
 
 const db = mongoose.connection;
@@ -117,11 +118,12 @@ passport.use(
     },
     function (inputid, inputpw, done) {
       db.collection("login").findOne({ id: inputid }, function (err, result) {
+        const SamePw = bcrypt.compareSync(inputpw, result.pw);
         if (err) return done(err);
 
         if (!result)
           return done(null, false, { message: "존재하지 않는 아이디입니다" });
-        if (inputpw == result.pw) {
+        if (SamePw) {
           return done(null, result);
         } else {
           return done(null, false, { message: "비밀번호가 틀렸습니다" });
@@ -145,8 +147,9 @@ passport.deserializeUser(function (serialuser, done) {
 });
 
 app.post("/register", function (req, res) {
+  const HashPw = bcrypt.hashSync(req.body.pw);
   db.collection("login").insertOne(
-    { id: req.body.id, pw: req.body.pw },
+    { id: req.body.id, pw: HashPw },
     function (err, result) {
       res.redirect("/login");
     }
