@@ -19,7 +19,7 @@
     <title>Hello, world!</title>
   </head>
   <body>
-    <%- include("nav.html") %>
+    <%- include("nav.ejs") %>
 
     <!-- <div class="container input-group mb-2">
       <input class="form-control" id="search-input" />
@@ -41,6 +41,7 @@
         <li class="list-group-item">
           <!-- <p>글번호 : <%= posts[i]._id %></p> -->
           <h4><%= posts[i].title %></h4>
+          <p>User : <%= posts[i].user %></p>
           <p><%= posts[i].date %></p>
           <button class="btn btn-danger delete" data-id="<%= posts[i]._id %>">
             삭제하기

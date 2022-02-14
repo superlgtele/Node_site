@@ -28,6 +28,10 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(function (req, res, next) {
+  res.locals.isAuthenticated = req.isAuthenticated();
+  next();
+});
 
 app.listen(process.env.PORT, function () {
   console.log("Start 5000 Server!");
@@ -77,6 +81,11 @@ app.get("/detail/:id", function (req, res) {
 
 app.get("/mypage", checklogin, function (req, res) {
   res.render("mypage.ejs", { 사용자: req.user });
+});
+
+app.get("/logout", function (req, res) {
+  req.logOut();
+  res.redirect("/");
 });
 
 function checklogin(req, res, next) {
@@ -166,7 +175,7 @@ app.post("/add", function (req, res) {
       const AllBoardNum = result.totalPost;
       const BoardData = {
         _id: AllBoardNum + 1,
-        user: req.user._id,
+        user: req.user.id,
         title: req.body.title,
         date: req.body.date,
       };
@@ -189,13 +198,13 @@ app.post("/add", function (req, res) {
 
 app.delete("/delete", function (req, res) {
   req.body._id = parseInt(req.body._id);
-  const DeleteData = { _id: req.body._id, user: req.user._id };
-  console.log(DeleteData);
+  const DeleteData = { _id: req.body._id, user: req.user.id };
   db.collection("practice").deleteOne(DeleteData, function (err, result) {
-    if (result.deletedCount == 0) {
-      return err;
-    } else {
-      res.status(200).send(result);
-    }
+    // if (result.deletedCount == 0) {
+    //   return err;
+    // } else {
+    //   res.status(200).send(result);
+    // }
+    res.status(200).send(result);
   });
 });
