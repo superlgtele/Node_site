@@ -110,11 +110,12 @@ app.put("/edit", function (req, res) {
 app.post(
   "/login",
   passport.authenticate("local", {
-    failureRedirect: "/fail",
-  }),
-  function (req, res) {
-    res.redirect("/");
-  }
+    successRedirect: "/",
+    failureRedirect: "/login",
+  })
+  // function (req, res) {
+  //   res.redirect("/");
+  // }
 );
 
 passport.use(
@@ -130,7 +131,7 @@ passport.use(
         const SamePw = bcrypt.compareSync(inputpw, result.pw);
         if (err) return done(err);
 
-        if (!result)
+        if (result.id !== inputid)
           return done(null, false, { message: "존재하지 않는 아이디입니다" });
         if (SamePw) {
           return done(null, result);
