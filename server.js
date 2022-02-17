@@ -88,6 +88,14 @@ app.get("/logout", function (req, res) {
   res.redirect("/");
 });
 
+app.get("/search", function (req, res) {
+  db.collection("practice")
+    .find({ title: req.query.value })
+    .toArray((err, result) => {
+      res.render("search.ejs", { posts: result });
+    });
+});
+
 function checklogin(req, res, next) {
   if (req.user) {
     next();
